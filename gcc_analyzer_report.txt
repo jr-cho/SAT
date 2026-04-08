@@ -1,1 +1,0 @@
-clang: error: unknown argument '-fanalyzer'; did you mean '-Xanalyzer'?
