@@ -7,7 +7,6 @@ void vulnerable_function(char *input) {
 
     // Buffer overflow
     strcpy(buffer, input);
-
     // Memory leak
     char *ptr = malloc(100);
 
