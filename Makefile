@@ -2,9 +2,15 @@ CC      = gcc
 CFLAGS  = -Wall -Wextra -std=c11 -Iinclude -Isrc
 LDFLAGS =
 
+RAYLIB_INC  = -I/opt/homebrew/include
+RAYLIB_LIBS = -L/opt/homebrew/lib -lraylib \
+              -framework OpenGL -framework Cocoa \
+              -framework IOKit -framework CoreVideo
+
 BUILD_DIR = build
 OBJ_DIR   = $(BUILD_DIR)/obj
 TARGET    = $(BUILD_DIR)/analyzer
+GUI_TARGET = $(BUILD_DIR)/sat-gui
 
 SRCS_COMMON = \
     src/common/logging.c \
@@ -16,7 +22,11 @@ SRCS_CORE = \
     src/core/findings.c \
     src/core/scoring.c
 
-// NEED TO ADD GUI -JG
+SRCS_GUI = \
+    src/gui/model.c \
+    src/gui/controller.c \
+    src/gui/ui.c \
+    src/gui/main.c
 
 SRCS_PARSER = \
     src/parser/parser.c \
@@ -40,15 +50,29 @@ SRCS_MAIN = \
     src/tool_finder.c \
     src/main.c
 
-SRCS = $(SRCS_COMMON) $(SRCS_CORE) $(SRCS_PARSER) $(SRCS_RUNNER) $(SRCS_REPORT) $(SRCS_MAIN)
-OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+SRCS      = $(SRCS_COMMON) $(SRCS_CORE) $(SRCS_PARSER) $(SRCS_RUNNER) $(SRCS_REPORT) $(SRCS_MAIN)
+OBJS      = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
-.PHONY: all run clean
+# GUI: shared objects are everything except main.o
+SHARED_OBJS = $(filter-out $(OBJ_DIR)/main.o, $(OBJS))
+GUI_OBJS    = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS_GUI))
+
+.PHONY: all gui run clean
 
 all: $(TARGET)
 
+gui: $(GUI_TARGET)
+
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+# GUI-specific rule (shorter stem wins over the generic pattern)
+$(OBJ_DIR)/gui/%.o: src/gui/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(RAYLIB_INC) -c $< -o $@
+
+$(GUI_TARGET): $(GUI_OBJS) $(SHARED_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(RAYLIB_LIBS)
 
 $(OBJ_DIR)/%.o: src/%.c
 	@mkdir -p $(dir $@)
@@ -58,4 +82,4 @@ run: $(TARGET)
 	$(TARGET)
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET)
+	rm -rf $(OBJ_DIR) $(TARGET) $(GUI_TARGET)
