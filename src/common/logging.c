@@ -1,3 +1,4 @@
+
 #include "../../include/common/logging.h"
 #include <stdarg.h>
 
