@@ -10,6 +10,7 @@ int run_cppcheck(const char *source_file, const char *output_file)
         "--xml-version=2",
         "--enable=all",
         "--suppress=missingIncludeSystem",
+        "--",
         (char *)source_file,
         NULL
     };

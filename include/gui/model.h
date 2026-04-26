@@ -1,7 +1,7 @@
 #pragma once
 #include "../core/database.h"
 #include <stdbool.h>
-#include <pthread.h>
+#include <threads.h>
 
 typedef enum { GUI_IDLE, GUI_RUNNING, GUI_DONE, GUI_ERROR } GUIState;
 
@@ -12,8 +12,8 @@ typedef struct {
 
     GUIState         state;
     char             status_msg[256];
-    pthread_t        worker;
-    pthread_mutex_t  lock;
+    thrd_t           worker;
+    mtx_t            lock;
 
     bool             tool_enabled[TOOL_COUNT];
     Severity         min_severity;

@@ -17,7 +17,7 @@ Severity normalize_severity(ToolID tool, const char *raw) {
 
         case TOOL_FLAWFINDER: {
             // FLAWFINDER uses 1-5
-            int level = atoi(raw);
+            int level = (int)strtol(raw, NULL, 10);
             if (level >= 5) return SEV_CRITICAL;
             if (level == 4) return SEV_HIGH;
             if (level == 3) return SEV_MEDIUM;

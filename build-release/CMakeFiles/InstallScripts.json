@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/joshua/projects/SAT/build-release/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

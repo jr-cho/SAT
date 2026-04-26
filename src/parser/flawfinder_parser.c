@@ -101,9 +101,9 @@ FindingList *parse_flawfinder(const char *output_file)
 
         f->tool     = TOOL_FLAWFINDER;
         f->file     = str_dup(fields[0]);
-        f->line     = atoi(fields[1]);
-        f->column   = atoi(fields[2]);
-        f->severity = level_to_severity(atoi(fields[4]));
+        f->line     = (int)strtol(fields[1], NULL, 10);
+        f->column   = (int)strtol(fields[2], NULL, 10);
+        f->severity = level_to_severity((int)strtol(fields[4], NULL, 10));
 
         /* Category: "Name (Category)" e.g. "gets (buffer)" */
         char cat_buf[1030];

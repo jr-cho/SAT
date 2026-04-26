@@ -15,6 +15,7 @@ int run_gcc_analyzer(const char *source_file, const char *output_file)
         (char *)gcc,
         "-fanalyzer",
         "-o", "/dev/null",
+        "--",
         (char *)source_file,
         NULL
     };

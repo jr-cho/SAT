@@ -437,7 +437,7 @@ bool ui_frame(GUIModel *m)
         int c;
         while ((c = GetCharPressed()) != 0) {
             int len = (int)strlen(m->target);
-            if (c >= 32 && len < 510) {
+            if (c >= 32 && len < (int)sizeof(m->target) - 2) {
                 m->target[len]     = (char)c;
                 m->target[len + 1] = '\0';
             }
@@ -476,9 +476,9 @@ bool ui_frame(GUIModel *m)
 
     /* ── Detect analysis completion ── */
     static bool was_running = false;
-    pthread_mutex_lock(&m->lock);
+    mtx_lock(&m->lock);
     GUIState st = m->state;
-    pthread_mutex_unlock(&m->lock);
+    mtx_unlock(&m->lock);
 
     if (was_running && st == GUI_DONE) {
         model_rebuild_visible(m);

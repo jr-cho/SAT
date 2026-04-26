@@ -11,7 +11,7 @@ void model_init(GUIModel *m)
     m->min_severity = SEV_UNKNOWN;
     m->selected     = -1;
     m->rows_visible = 11;
-    pthread_mutex_init(&m->lock, NULL);
+    mtx_init(&m->lock, mtx_plain);
     snprintf(m->status_msg, sizeof(m->status_msg),
              "Enter a source file path and click Run Analysis");
 }
@@ -19,10 +19,10 @@ void model_init(GUIModel *m)
 void model_destroy(GUIModel *m)
 {
     if (m->state == GUI_RUNNING)
-        pthread_join(m->worker, NULL);
+        thrd_join(m->worker, NULL);
     free(m->visible_idx);
     db_free(m->db);
-    pthread_mutex_destroy(&m->lock);
+    mtx_destroy(&m->lock);
 }
 
 void model_rebuild_visible(GUIModel *m)

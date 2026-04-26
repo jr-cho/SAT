@@ -8,6 +8,7 @@ int run_flawfinder(const char *source_file, const char *output_file)
         "flawfinder",
         "--dataonly",
         "--csv",
+        "--",
         (char *)source_file,
         NULL
     };

@@ -13,6 +13,7 @@ int run_coverity(const char *source_file, const char *output_file)
     char *args[] = {
         "cov-analyze",
         "--dir", "cov-int",
+        "--",
         (char *)source_file,
         NULL
     };

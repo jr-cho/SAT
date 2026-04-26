@@ -75,8 +75,8 @@ FindingList *parse_cppcheck(const char *output_file)
             current->file   = attr_val(line, "file");
             char *ln        = attr_val(line, "line");
             char *col       = attr_val(line, "column");
-            if (ln)  { current->line   = atoi(ln);  free(ln); }
-            if (col) { current->column = atoi(col); free(col); }
+            if (ln)  { current->line   = (int)strtol(ln,  NULL, 10); free(ln); }
+            if (col) { current->column = (int)strtol(col, NULL, 10); free(col); }
         }
         /* End of error block — commit finding */
         else if (strstr(line, "</error>") && current) {

@@ -26,17 +26,17 @@ static void ingest(Database *db, FindingList *list)
     free(list);
 }
 
-static void *analysis_thread(void *arg)
+static int analysis_thread(void *arg)
 {
     GUIModel *m = arg;
 
     Database *new_db = db_new();
     if (!new_db) {
-        pthread_mutex_lock(&m->lock);
+        mtx_lock(&m->lock);
         m->state = GUI_ERROR;
         snprintf(m->status_msg, sizeof(m->status_msg), "Out of memory");
-        pthread_mutex_unlock(&m->lock);
-        return NULL;
+        mtx_unlock(&m->lock);
+        return 0;
     }
 
     run_cppcheck(m->target, TMP_CPPCHECK);
@@ -59,7 +59,7 @@ static void *analysis_thread(void *arg)
     if (gcc_exec) remove(TMP_GCC);
     if (cov_ran)  remove(TMP_COVERITY);
 
-    pthread_mutex_lock(&m->lock);
+    mtx_lock(&m->lock);
     db_free(m->db);
     m->db = new_db;
     snprintf(m->status_msg, sizeof(m->status_msg),
@@ -68,9 +68,9 @@ static void *analysis_thread(void *arg)
              new_db->findings->count == 1 ? "" : "s",
              m->target);
     m->state = GUI_DONE;
-    pthread_mutex_unlock(&m->lock);
+    mtx_unlock(&m->lock);
 
-    return NULL;
+    return 0;
 }
 
 void controller_run(GUIModel *m)
@@ -83,7 +83,7 @@ void controller_run(GUIModel *m)
     m->state = GUI_RUNNING;
     snprintf(m->status_msg, sizeof(m->status_msg),
              "Running analysis on %s...", m->target);
-    pthread_create(&m->worker, NULL, analysis_thread, m);
+    thrd_create(&m->worker, analysis_thread, m);
 }
 
 void controller_toggle_tool(GUIModel *m, int tool_idx)

@@ -27,6 +27,7 @@ char *str_trim(char *s)
 
 int str_starts_with(const char *s, const char *prefix)
 {
+    if (!s || !prefix) return 0;
     return strncmp(s, prefix, strlen(prefix)) == 0;
 }
 
