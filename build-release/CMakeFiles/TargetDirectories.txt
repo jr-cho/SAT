@@ -1,3 +1,0 @@
-/home/joshua/projects/SAT/build-release/CMakeFiles/analyzer.dir
-/home/joshua/projects/SAT/build-release/CMakeFiles/edit_cache.dir
-/home/joshua/projects/SAT/build-release/CMakeFiles/rebuild_cache.dir
