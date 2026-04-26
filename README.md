@@ -1,134 +1,132 @@
-# Software Framework for Comparative Analysis of Source Code Static Analysis Tools
+# SAT — Static Analysis Tool
 
-A GUI-based framework that runs multiple C/C++ static analysis tools simultaneously and generates unified vulnerability reports.
+SAT runs multiple C static analysis tools against a source file, normalises their output into a unified finding model, correlates overlapping results across tools, and renders a report. It ships as both a command-line tool (`analyzer`) and a Raylib-based GUI (`sat-gui`).
 
-## Overview
-
-This framework integrates four static analysis tools to compare their findings across the same codebase:
-
-- **Cppcheck** — detects memory leaks, undefined behavior, and coding standard violations
-- **Flawfinder** — identifies potential security vulnerabilities with CWE references
-- **Coverity** — performs deep static analysis for security defects and reliability issues
-- **GCC (`-fanalyzer`)** — captures compiler warnings and semantic issues
-
-## Features
-
-- GUI file selector for one or more `.c`, `.cpp`, `.h`, or `.hpp` files
-- Parallel or sequential tool execution with progress indicators
-- Unified report with severity levels (low, medium, high, critical), file names, and line numbers
-- Filtering by severity, tool, or keyword
-- Export to PDF, HTML, JSON, or XML
-- Configurable per-tool settings (rule sets, risk thresholds, warning levels)
-- Offline — no internet connection required
-
-## Requirements
-
-### System
-
-| Requirement | Minimum |
-|-------------|---------|
-| CPU | x86-64, 4 cores recommended |
-| RAM | 8 GB |
-| Storage | SSD recommended |
-
-### Operating System
-
-- **Linux** — Ubuntu 22.04+ (recommended)
-- **macOS** — 12+
-- **Windows** — Windows 10/11 via [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
-
-### Dependencies
-
-- GCC 11+
-- Cppcheck 2.x
-- Flawfinder 2.x
-- Coverity 2023.x+
-- Clang
-- Raylib
-
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
-
-2. Install dependencies (Ubuntu):
-   ```bash
-   sudo apt update
-   sudo apt install gcc cppcheck flawfinder clang
-   ```
-   Coverity requires a separate download from the [Synopsys website](https://scan.coverity.com/).
-
-3. Build the project:
-   ```bash
-   make
-   ```
-
-### Windows (WSL)
-
-Install WSL before proceeding:
-```powershell
-wsl --install
 ```
-Then follow the Linux instructions inside the WSL terminal.
+$ ./analyzer tests/test.c
 
-## Usage
+  Static Analysis Report
+  Target : tests/test.c
+  Date   : 2026-04-26 14:32:01
+======================================================================
 
-1. Launch the application
-2. Click **Select File** to choose one or more `.c`/`.cpp` files, or select a directory
-3. (Optional) Click **Settings** to configure tool-specific options
-4. Click **Run Analysis**
-5. Click **View Report** to review findings
-6. (Optional) Click **Export Report** to save as PDF, HTML, JSON, or XML
+SUMMARY
+----------------------------------------------------------------------
+Tool                  Total   Info    Low  Medium   High   Critical
+----------------------------------------------------------------------
+cppcheck                  3      0      0       1      2          0
+flawfinder                2      0      1       0      1          0
+gcc (-fanalyzer)          0      0      0       0      0          0
+coverity                  0      0      0       0      0          0
+----------------------------------------------------------------------
+TOTAL                     5      0      1       1      3          0
+```
 
-## Supported File Types
+---
 
-| Extension | Description |
-|-----------|-------------|
-| `.c` | C source file |
-| `.cpp` | C++ source file |
-| `.h` | C/C++ header |
-| `.hpp` | C++ header |
+## Documentation
 
-## Report Output
+| Document | Description |
+|----------|-------------|
+| [docs/install.md](docs/install.md) | Prerequisites and build instructions for Linux, macOS, and Windows |
+| [docs/architecture.md](docs/architecture.md) | File-by-file reference — what every source file does |
+| [docs/design.md](docs/design.md) | Design decisions — data model, pipeline, algorithms, trade-offs |
+| [docs/TOOLS.md](docs/TOOLS.md) | The four wrapped tools — invocation, output format, severity mapping, installation |
+| [docs/security.md](docs/security.md) | Security hardening — fixes applied and how to run sanitizers |
 
-Reports include:
+---
 
-- Total issue count and severity distribution
-- Per-file findings with line numbers
-- CWE IDs and rule references where available
-- Tool-specific results alongside a normalized cross-tool view
+## Quick Start
 
-## Performance Targets
+**Linux / macOS**
+```bash
+git clone <repository-url>
+cd SAT
+bash install.sh
+```
 
-| Metric | Target |
-|--------|--------|
-| UI response time | ≤ 200 ms |
-| Analysis start | ≤ 2 seconds |
-| 100-file project analysis | ≤ 60 seconds |
-| Report display | ≤ 3 seconds |
-| Max RAM (≤1,000 files) | ≤ 2 GB |
+**Windows (PowerShell)**
+```powershell
+git clone <repository-url>
+cd SAT
+.\install.ps1
+```
 
-## Security
+Both scripts detect your compiler and toolchain, offer CLI-only or CLI + GUI build options, and print the path to the resulting binary.
 
-- File inputs restricted to `.c`, `.cpp`, `.h`, `.hpp` with enforced size limits
-- File paths and user inputs sanitized against command injection and path traversal
-- External tools run in controlled subprocess environments
-- Source code is not transmitted outside the local environment
+---
+
+## What It Does
+
+1. **Runs tools** — forks `cppcheck`, `flawfinder`, `gcc -fanalyzer`, and `cov-analyze` as child processes, capturing their output to temp files.
+2. **Parses output** — each tool has a dedicated parser that converts XML, CSV, or text output into `Finding` structs (file, line, column, severity, category, message).
+3. **Correlates findings** — findings from different tools within three lines of each other in the same file are grouped into a `CorrelatedFinding`. Multi-tool hits appear with a confidence score.
+4. **Reports** — writes a formatted text report and a JSON file. The CLI prints the text report to stdout. The GUI displays findings in a filterable list with a detail panel.
+
+All four tools are optional. SAT runs and reports whatever is found by whichever tools are installed.
+
+---
+
+## Supported Tools
+
+| Tool | What it detects | Required? |
+|------|----------------|-----------|
+| [Cppcheck](https://cppcheck.sourceforge.io) | Memory errors, undefined behaviour, coding issues | No |
+| [Flawfinder](https://dwheeler.com/flawfinder/) | Dangerous function calls with CWE references | No |
+| [GCC `-fanalyzer`](https://gcc.gnu.org/onlinedocs/gcc/Static-Analyzer-Options.html) | Use-after-free, null deref, taint analysis | No (requires GCC 12+) |
+| [Coverity](https://scan.coverity.com) | Deep inter-procedural analysis | No (commercial licence) |
+
+---
+
+## Building
+
+The recommended path is the install script above. For manual CMake builds:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+Add `-DENABLE_ASAN=ON` for AddressSanitizer + UBSan, `-DENABLE_TSAN=ON` for ThreadSanitizer. See [docs/install.md](docs/install.md) for the full options.
+
+The GUI requires the Raylib submodule:
+
+```bash
+git submodule add https://github.com/raysan5/raylib.git external/raylib
+git submodule update --init --recursive
+cmake -B build && cmake --build build
+```
+
+---
+
+## CLI Usage
+
+```
+analyzer <source_file.c>
+```
+
+Outputs to stdout and writes `analysis_report.txt` and `analysis_report.json` in the current directory.
+
+## GUI Usage
+
+```
+sat-gui
+```
+
+Enter a source file path in the top bar and click **Run Analysis** (or press Enter). Use the sidebar to filter by tool or minimum severity. Click a finding row to see the full message in the detail panel.
+
+---
 
 ## License
 
-This project includes the following open-source tools. See the **About** section of the application for their respective license notices:
+SAT itself is released under the terms in `LICENSE`.
 
-- [Cppcheck](https://cppcheck.sourceforge.io/) — GPL v3
-- [Flawfinder](https://dwheeler.com/flawfinder/) — GPL v2
-- [GCC](https://gcc.gnu.org/) — GPL v3
-- [Raylib](https://www.raylib.com/) — zlib
+Bundled / wrapped tools have separate licences:
 
-Coverity is a commercial product by Synopsys.
-
-## Contributing
-
-The system is designed with a modular plugin architecture. New static analysis tools can be integrated by implementing the standardized adapter interface without modifying core logic. See the developer documentation for details.
+| Tool | Licence |
+|------|---------|
+| [Raylib](https://github.com/raysan5/raylib) | zlib |
+| [Cppcheck](https://cppcheck.sourceforge.io) | GPL v3 |
+| [Flawfinder](https://dwheeler.com/flawfinder/) | GPL v2 |
+| GCC | GPL v3 |
+| Coverity | Commercial — Synopsys |

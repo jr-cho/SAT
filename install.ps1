@@ -162,6 +162,11 @@ $BuildDir = "build-$BuildDirSuffix"
 
 # ── Configure ─────────────────────────────────────────────────────────────────
 Write-Step "Configuring (cmake)"
+# Remove any stale cache from a previous run or a different machine's path.
+if (Test-Path $BuildDir) {
+    Write-Warn "Removing stale build dir: $BuildDir"
+    Remove-Item -Recurse -Force $BuildDir
+}
 
 $CmakeArgs = @("-B", $BuildDir, "-DCMAKE_BUILD_TYPE=$CMakeType") + $ExtraFlags
 if ($Generator) {

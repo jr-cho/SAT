@@ -1,16 +1,13 @@
-CC         = gcc
-CFLAGS     = -Wall -Wextra -std=c11 -D_POSIX_C_SOURCE=200809L -Iinclude -Isrc $(EXTRA_FLAGS)
-LDFLAGS    = $(EXTRA_FLAGS)
+CC      = gcc
+CFLAGS  = -Wall -Wextra -std=c11 -D_POSIX_C_SOURCE=200809L -Iinclude -Isrc $(EXTRA_FLAGS)
+LDFLAGS = $(EXTRA_FLAGS)
 
-RAYLIB_INC  = -I/opt/homebrew/include
-RAYLIB_LIBS = -L/opt/homebrew/lib -lraylib \
-              -framework OpenGL -framework Cocoa \
-              -framework IOKit -framework CoreVideo
+# NOTE: The GUI target (sat-gui) is built via CMake, not this Makefile.
+#       Use install.sh / install.ps1, or: cmake -B build-cmake && cmake --build build-cmake
 
 BUILD_DIR = build
 OBJ_DIR   = $(BUILD_DIR)/obj
 TARGET    = $(BUILD_DIR)/analyzer
-GUI_TARGET = $(BUILD_DIR)/sat-gui
 
 SRCS_COMMON = \
     src/common/logging.c \
@@ -21,12 +18,6 @@ SRCS_CORE = \
     src/core/database.c \
     src/core/findings.c \
     src/core/scoring.c
-
-SRCS_GUI = \
-    src/gui/model.c \
-    src/gui/controller.c \
-    src/gui/ui.c \
-    src/gui/main.c
 
 SRCS_PARSER = \
     src/parser/parser.c \
@@ -50,29 +41,15 @@ SRCS_MAIN = \
     src/tool_finder.c \
     src/main.c
 
-SRCS      = $(SRCS_COMMON) $(SRCS_CORE) $(SRCS_PARSER) $(SRCS_RUNNER) $(SRCS_REPORT) $(SRCS_MAIN)
-OBJS      = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+SRCS = $(SRCS_COMMON) $(SRCS_CORE) $(SRCS_PARSER) $(SRCS_RUNNER) $(SRCS_REPORT) $(SRCS_MAIN)
+OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
-# GUI: shared objects are everything except main.o
-SHARED_OBJS = $(filter-out $(OBJ_DIR)/main.o, $(OBJS))
-GUI_OBJS    = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS_GUI))
-
-.PHONY: all gui run clean asan tsan analyze scan
+.PHONY: all run clean asan tsan analyze scan
 
 all: $(TARGET)
 
-gui: $(GUI_TARGET)
-
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
-
-# GUI-specific rule (shorter stem wins over the generic pattern)
-$(OBJ_DIR)/gui/%.o: src/gui/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(RAYLIB_INC) -c $< -o $@
-
-$(GUI_TARGET): $(GUI_OBJS) $(SHARED_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(RAYLIB_LIBS)
 
 $(OBJ_DIR)/%.o: src/%.c
 	@mkdir -p $(dir $@)
@@ -82,7 +59,7 @@ run: $(TARGET)
 	$(TARGET)
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) $(GUI_TARGET)
+	rm -rf $(OBJ_DIR) $(TARGET)
 
 # AddressSanitizer + UndefinedBehaviorSanitizer (redzones, poison freed memory, UB traps)
 asan:

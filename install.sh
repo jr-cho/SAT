@@ -125,6 +125,8 @@ CMAKE_ARGS+=(-B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$CMAKE_TYPE")
 
 # ── Configure ─────────────────────────────────────────────────────────────────
 step "Configuring (cmake)"
+# Remove any stale cache from a previous run or a different machine's path.
+[[ -d "$BUILD_DIR" ]] && { warn "Removing stale build dir: $BUILD_DIR"; rm -rf "$BUILD_DIR"; }
 cmake "${CMAKE_ARGS[@]}" || die "CMake configure failed."
 
 # ── Build ─────────────────────────────────────────────────────────────────────
